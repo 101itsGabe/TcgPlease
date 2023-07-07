@@ -43,7 +43,7 @@ const getAllSets = async() =>
   }
 }
 
-
+/*
 const getAllLegalCards = async(pageNum) =>
 {
   
@@ -59,6 +59,7 @@ const getAllLegalCards = async(pageNum) =>
     throw er;
   }
 }
+*/
 
 
 
@@ -68,6 +69,5 @@ const PokeApi =
 {
   getCard,
   getAllSets,
-  getAllLegalCards
 }
 export default PokeApi;

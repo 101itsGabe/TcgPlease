@@ -20,7 +20,7 @@ function ShowLegalCards()
     const fetchCards = async() => {
         try 
         {
-          pokemon.card.where({ q: 'legalities.standard:legal', pageSize: 100, page: currentPage })
+          pokemon.card.where({ q: 'legalities.standard:legal', pageSize: 20, page: currentPage })
           .then(result => {
             console.log(result.data) // "Blastoise"
             setCards(result.data);
