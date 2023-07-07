@@ -1,9 +1,15 @@
 import PokeApi from "../PokeApi";
 import React from 'react';
 import SetsPage from "./SetsPage";
+import pokemon from 'pokemontcgsdk'
+
+const apiKey = 'b42a776d-16b7-49b2-973c-be2b640e99d9';
+pokemon.configure({apiKey: {apiKey}});
+
 
 function ShowLegalCards()
 {
+    
     const [cards, setCards] = React.useState([]);
     const [currentPage, setCurrentPage] = React.useState(1);
 
@@ -11,16 +17,32 @@ function ShowLegalCards()
         fetchCards();
       }, [currentPage]);
 
-    const fetchCards = () => {
-        PokeApi.getAllLegalCards(currentPage)
-        .then((resolvedValue) =>{
-            console.log(resolvedValue);
-            setCards(resolvedValue);
-        })
+    const fetchCards = async() => {
+        try 
+        {
+          pokemon.card.where({ q: 'legalities.standard:legal', pageSize: 100, page: currentPage })
+          .then(result => {
+            console.log(result.data) // "Blastoise"
+            setCards(result.data);
+          })
+            
+        }catch(er)
+        {
+            console.log(er);
+        }
+        
 
     };
 
+    const nextPage = () =>{
+        setCurrentPage(currentPage + 1);
+    }
 
+    const prevPage = () =>{
+        if (!currentPage - 1 <= 0)
+            setCurrentPage(currentPage - 1);
+    }
+    
     const renderCards = () => {
         const listItems = [];
         for (let i = 0; i < cards.length; i++) {
@@ -31,27 +53,20 @@ function ShowLegalCards()
         }
         return listItems;
       };
+      
 
-      const handleNextPage = () => {
-        setCurrentPage(currentPage + 1);
-      };
-    
-      const handlePreviousPage = () => {
-        if (currentPage > 1) {
-          setCurrentPage(currentPage - 1);
-        }
-      };
 
 
     return(
         <>
         <h1>All Cards</h1>
-        <button onClick={handlePreviousPage}>Previous Page</button>
-      <button onClick={handleNextPage}>Next Page</button>
+        <button onClick={prevPage}>Prev Page</button> 
+        <button onClick={nextPage}>Next Page</button>
         <ul>{renderCards()}</ul>
         </>
     );
-
+    
+    
     
 }
 

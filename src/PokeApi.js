@@ -1,9 +1,10 @@
 import axios from 'axios';
+import pokemon from 'pokemontcgsdk'
 
 
 const API_BASE_URL = 'https://api.pokemontcg.io/v2';
 const apiKey = 'b42a776d-16b7-49b2-973c-be2b640e99d9';
-
+pokemon.configure({apiKey: {apiKey}});
 const getCard = async (cardId) =>
 {
   try 
@@ -43,20 +44,16 @@ const getAllSets = async() =>
 }
 
 
-const getAllLegalCards = async(page) =>
+const getAllLegalCards = async(pageNum) =>
 {
+  
   try 
   {
-    const response = await axios.get('https://api.pokemontcg.io/v2/cards?q=legalities.standard:legal&page=${page}',{
-      headers: {
-        'X-Api-Key': apiKey,
-      },
-    });
-
-    console.log(response);
-    const sets = response.data.data;
-    //console.log(sets[150]);
-    return sets;
+    pokemon.card.where({ q: 'legalities.standard:legal', pageSize: 250, page: pageNum })
+    .then(result => {
+    //console.log(result.data) // "Blastoise"
+    return result.data;
+    })
   } catch(er){
     console.log(er);
     throw er;

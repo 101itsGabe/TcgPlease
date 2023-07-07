@@ -94,64 +94,25 @@ function SignIn()
 {
   const navigate = useNavigate();
   const usersRef = firestore.collection("users");
-  const query = usersRef.orderBy('createdAt');
-  const [user] = useAuthState(auth);
-  const [users] = useCollectionData(query, {idField: 'id'});
+    const query = usersRef.orderBy('createdAt');
+    const [users] = useCollectionData(query, {idField: 'id'});
 
   const signInWithGoogle = async() => {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
-    
-    const {uid, photoURL, email} = auth.currentUser;
-    
-    
-    const extractUsername = (email) => {
-      let username = '';
-      console.log('inside extractUseraname');
-      console.log(email)
-      for (let i = 0; i < email.length; i++) {
-        if (email[i] === '@') {
-          break;
-        }
-        username += email[i];
-      }
-      return username;
-    };
-
-   
-    if(!userExsist(email)) {
-      console.log('Does not exists');
-    await usersRef.add(
-      {
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        email,
-        photoURL,
-        username: extractUsername(email)
-      }
-    )
-    }
+    console.log('Inside first sign in');
+    console.log(users);
+    await ifUser(users);
     
     navigate('/userpage');
   }
 
-
-  const userExsist = (email) =>
-  {
-    console.log("CHECKING NIGGA");
-    console.log(typeof(users));
-    for(let i = 0; i < users.length; i++)
-    {
-      console.log(users[i].email);
-      if(users[i].email == email)
-        return true;
-    }
-    return false
-  }
-  
   return(
     <button onClick={signInWithGoogle}>Sign In With Google</button>
   )
 }
+
+
 function SetPage()
 {
   return SetsPage.ShowAllSets();
@@ -166,6 +127,66 @@ function Freak()
   );
 }
 
+/*
+
+  Functions for Sing in
+
+*/
+function extractUsername(user){
+  let username = '';
+  console.log('inside extractUseraname');
+  console.log(user)
+  for (let i = 0; i < user.email.length; i++) {
+    if (user.email[i] === '@') {
+      break;
+    }
+    username += user.email[i];
+  }
+  return username;
+};
+
+function userExsist (user, users)
+  {
+    console.log("CHECKING NIGGA");
+    for(let i = 0; i < users.length; i++)
+    {
+      if(users[i].email == user.email)
+        return true;
+    }
+    return false
+  }
+
+async function ifUser(users)
+{
+  const user = auth.currentUser;
+  const usersRef = firestore.collection("users");
+  const query = usersRef.orderBy('createdAt');
+  console.log(users);
+
+
+
+
+  if(user && !userExsist(user,users)) {
+    console.log('Does not exists');
+    await usersRef.add(
+    {
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      email: user.email,
+      photoURL: user.photoURL,
+      username: extractUsername(user)
+    }
+  )
+  }
+
+
+
+}
+
+/*
+
+ Sign Out
+
+*/
 function SignOut()
 {
   
