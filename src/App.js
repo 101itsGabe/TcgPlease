@@ -42,10 +42,12 @@ function App() {
         {user ?
         <header>
           <p><img src={user.photoURL}/>{user.email}</p>
-        </header>:<p>nothing</p>
+        </header>:<p></p>
         }
         {user ? 
-        <></>
+        <>
+        
+        </>
         :
         <>
         </>
