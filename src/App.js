@@ -86,8 +86,8 @@ function SignIn()
 
   const signInWithGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    navigate('/userpage');
     auth.signInWithPopup(provider);
+    navigate('/userpage');
   }
   return(
     <button onClick={signInWithGoogle}>Sign In With Google</button>
