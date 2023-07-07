@@ -8,7 +8,7 @@ function ShowAllSets()
     React.useEffect(() => {
         const res = PokeApi.getAllSets();
         res.then((resolvedValue) =>{
-        
+            console.log(resolvedValue);
             setSets(resolvedValue);
         }
         );

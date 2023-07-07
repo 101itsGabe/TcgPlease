@@ -42,9 +42,35 @@ const getAllSets = async() =>
   }
 }
 
+
+const getAllLegalCards = async(page) =>
+{
+  try 
+  {
+    const response = await axios.get('https://api.pokemontcg.io/v2/cards?q=legalities.standard:legal&page=${page}',{
+      headers: {
+        'X-Api-Key': apiKey,
+      },
+    });
+
+    console.log(response);
+    const sets = response.data.data;
+    //console.log(sets[150]);
+    return sets;
+  } catch(er){
+    console.log(er);
+    throw er;
+  }
+}
+
+
+
+
+
 const PokeApi = 
 {
   getCard,
-  getAllSets
+  getAllSets,
+  getAllLegalCards
 }
 export default PokeApi;

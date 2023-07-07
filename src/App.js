@@ -11,6 +11,7 @@ import 'firebase/compat/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from  'react-firebase-hooks/firestore';
 import { useNavigate } from 'react-router-dom';
+import DeckPage from './Pages/DeckPage';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
@@ -61,9 +62,16 @@ function App() {
         <Route exact path='/signin' element={<SignIn/>}/>
         <Route exact path='/userpage' element={<UserPage/>}/>
         <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
+        <Route exact path='/uh' element={<Uh/>}/>
       </Routes>
     </Router>
   );
+}
+
+
+function Uh()
+{
+  return DeckPage.ShowLegalCards();
 }
 
 function UserPage()
@@ -74,6 +82,8 @@ function UserPage()
               >Click here for all sets</Link>
         <br/>
         <Link to ='/freak'>Freak you</Link>
+        <br/>
+        <Link to ='/uh'>duh</Link>
         <br/>
         <SignOut/>
     </>
@@ -93,9 +103,12 @@ function SignIn()
     await auth.signInWithPopup(provider);
     
     const {uid, photoURL, email} = auth.currentUser;
-
+    
+    
     const extractUsername = (email) => {
       let username = '';
+      console.log('inside extractUseraname');
+      console.log(email)
       for (let i = 0; i < email.length; i++) {
         if (email[i] === '@') {
           break;
@@ -105,8 +118,8 @@ function SignIn()
       return username;
     };
 
-
-    if(user && !userExsist(user.email)) {
+   
+    if(!userExsist(email)) {
       console.log('Does not exists');
     await usersRef.add(
       {
@@ -117,17 +130,22 @@ function SignIn()
       }
     )
     }
-    else{
-      console.log('Exsists');
-        }
+    
     navigate('/userpage');
   }
 
 
   const userExsist = (email) =>
   {
-    
-    return users && users.some((u) => u.email === email);
+    console.log("CHECKING NIGGA");
+    console.log(typeof(users));
+    for(let i = 0; i < users.length; i++)
+    {
+      console.log(users[i].email);
+      if(users[i].email == email)
+        return true;
+    }
+    return false
   }
   
   return(
