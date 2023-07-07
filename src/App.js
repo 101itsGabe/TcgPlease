@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route, Switch, Link, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Link, Routes, Navigate } from 'react-router-dom';
 import PokeApi from './PokeApi';
 import SetsPage from './Pages/SetsPage';
 // Import the functions you need from the SDKs you need
@@ -60,7 +60,7 @@ function App() {
         <Route exact path='/freak' element={<Freak/>}/>
         <Route exact path='/signin' element={<SignIn/>}/>
         <Route exact path='/userpage' element={<UserPage/>}/>
-        <Route exact path='/' element={<SignIn/>}/>
+        <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
       </Routes>
     </Router>
   );
@@ -83,12 +83,53 @@ function UserPage()
 function SignIn()
 {
   const navigate = useNavigate();
+  const usersRef = firestore.collection("users");
+  const query = usersRef.orderBy('createdAt');
+  const [user] = useAuthState(auth);
+  const [users] = useCollectionData(query, {idField: 'id'});
 
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async() => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
+    await auth.signInWithPopup(provider);
+    
+    const {uid, photoURL, email} = auth.currentUser;
+
+    const extractUsername = (email) => {
+      let username = '';
+      for (let i = 0; i < email.length; i++) {
+        if (email[i] === '@') {
+          break;
+        }
+        username += email[i];
+      }
+      return username;
+    };
+
+
+    if(user && !userExsist(user.email)) {
+      console.log('Does not exists');
+    await usersRef.add(
+      {
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        email,
+        photoURL,
+        username: extractUsername(email)
+      }
+    )
+    }
+    else{
+      console.log('Exsists');
+        }
     navigate('/userpage');
   }
+
+
+  const userExsist = (email) =>
+  {
+    
+    return users && users.some((u) => u.email === email);
+  }
+  
   return(
     <button onClick={signInWithGoogle}>Sign In With Google</button>
   )
@@ -111,11 +152,12 @@ function SignOut()
 {
   
   const navigate = useNavigate();
+  const [user] = useAuthState(firebase.auth());
 
   return auth.currentUser && (
     <button onClick={() => {
-        navigate('/signin');
        auth.signOut();
+       navigate('/signin');
       }
       }>Sign Out</button>
   )
