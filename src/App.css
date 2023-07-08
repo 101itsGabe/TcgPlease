@@ -47,3 +47,9 @@
   max-width: 100px;
   max-height: 100px;
 }
+
+.signinbtn
+{
+  text-align: center;
+  margin-top: 25px;
+}

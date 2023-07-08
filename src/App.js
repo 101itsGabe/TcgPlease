@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route, Switch, Link, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, Routes, Navigate } from 'react-router-dom';
 import PokeApi from './PokeApi';
 import SetsPage from './Pages/SetsPage';
 // Import the functions you need from the SDKs you need
@@ -40,11 +40,6 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {user ?
-        <header>
-          <p><img src={user.photoURL}/>{user.email}</p>
-        </header>:<p></p>
-        }
         {user ? 
         <>
         
@@ -62,34 +57,44 @@ function App() {
         <Route exact path='/signin' element={<SignIn/>}/>
         <Route exact path='/userpage' element={<UserPage/>}/>
         <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
-        <Route exact path='/uh' element={<Uh/>}/>
+        <Route exact path='/card/:photoUrl' element={<DeckPage.CardPage />}/>
+        <Route exact path='/deckcardspage' element={<DeckCardsPage/>}/>
       </Routes>
     </Router>
   );
 }
 
 
-function Uh()
+function DeckCardsPage()
 {
+
   return DeckPage.ShowLegalCards();
 }
 
+
+
+
+
 function UserPage()
 {
+  const user = auth.currentUser;
   return(
     <>
+      <header>
+          <p><img src={user.photoURL}/>{user.email}</p>
+      </header>
       <Link to ='/sets'
               >Click here for all sets</Link>
         <br/>
         <Link to ='/freak'>Freak you</Link>
         <br/>
-        <Link to ='/uh'>duh</Link>
+        <Link to ='/deckcardspage'>Deck Cards Page</Link>
         <br/>
         <SignOut/>
     </>
   )
 }
-
+/*
 function SignIn()
 {
   const navigate = useNavigate();
@@ -109,6 +114,36 @@ function SignIn()
 
   return(
     <button onClick={signInWithGoogle}>Sign In With Google</button>
+  )
+}
+*/
+
+function SignIn() {
+  const navigate = useNavigate();
+  const usersRef = firestore.collection("users");
+  const query = usersRef.orderBy('createdAt');
+  const [users, loading] = useCollectionData(query, { idField: 'id' });
+
+  const signInWithGoogle = async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    if (users) {
+      await ifUser(users);
+    }
+    navigate('/userpage');
+  }
+
+  React.useEffect(() => {
+    if (users && !loading) {
+      console.log('Inside useEffect');
+      console.log(users);
+    }
+  }, [users, loading]);
+
+  return (
+    <div className="signinbtn">
+      <button onClick={signInWithGoogle}>Sign In With Google</button>
+    </div>
   )
 }
 
