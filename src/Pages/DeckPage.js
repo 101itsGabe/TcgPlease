@@ -1,17 +1,31 @@
 import React from 'react';
 import pokemon from 'pokemontcgsdk'
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
+import 'firebase/compat/auth';
 import "../App.css";
-import { BrowserRouter as Router, Route, Switch, Link, Routes, Navigate, useParams } from 'react-router-dom';
+import {Link, useParams } from 'react-router-dom';
 
 const apiKey = 'b42a776d-16b7-49b2-973c-be2b640e99d9';
 pokemon.configure({apiKey: {apiKey}});
+firebase.initializeApp({
+    apiKey: "AIzaSyDfIy7C_vJUwgqdAylzNZWwhVmfY3Uw4wQ",
+    authDomain: "tcg2-692e8.firebaseapp.com",
+    projectId: "tcg2-692e8",
+    storageBucket: "tcg2-692e8.appspot.com",
+    messagingSenderId: "668150010173",
+    appId: "1:668150010173:web:fe85c40b4066532d17f554",
+    measurementId: "G-774NYW9VMH"
+})
 
+  const firestore = firebase.firestore();
 
 function ShowLegalCards()
 {
     
     const [cards, setCards] = React.useState([]);
     const [currentPage, setCurrentPage] = React.useState(1);
+    const [cardsCache, setCardsCache] = React.useState({});
 
     React.useEffect(() => {
         fetchCards();
@@ -22,7 +36,7 @@ function ShowLegalCards()
         {
           pokemon.card.where({ q: 'legalities.standard:legal', pageSize: 20, page: currentPage })
           .then(result => {
-            console.log(result.data) // "Blastoise"
+            //console.log(result.data) // "Blastoise"
             setCards(result.data);
           })
             
@@ -54,8 +68,8 @@ function ShowLegalCards()
                     <li key={card.id}>
                         
                         <nav>
-                        <Link to={"/card/" + ecc}><img className='pkCard'src={card.images.small}/></Link></nav>{card.name} {i}
-
+                        <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name} {i}
+                        <button className='plusbtn' onClick={addCard()}>+</button>
                         
                     </li>
                     );
@@ -80,12 +94,30 @@ function ShowLegalCards()
     
 }
 
+/* 
+
+    Current Deck Page
+    - Need to add the deck thats being passed in
+
+*/
+
+function curDeck()
+{
+
+    return(
+        <div>
+            <p>yo</p>
+            <ShowLegalCards/>
+        </div>
+    )
+}
+
 function CardPage()
 {
-    console.log("i literally just heard like 7 shots fired");
+    //console.log("i literally just heard like 7 shots fired");
 
     const { photoUrl } = useParams();
-    console.log(photoUrl);
+    //console.log(photoUrl);
     return(
         <div>
             <img src={decodeURIComponent(photoUrl)}></img>
@@ -93,10 +125,40 @@ function CardPage()
     )
 }
 
+function addCard()
+{
+    console.log("wee");
+}
+
+
+async function addNewDeck(userId, deckName) {
+    try {
+      // Create a new deck document
+      const newDeckRef = firestore.collection('decks').doc();
+      
+      // Define the data for the new deck
+      const deckData = {
+        userId: userId,
+        deckName: deckName,
+        cards: []
+      };
+      
+      // Save the new deck to Firestore
+      await newDeckRef.set(deckData);
+      
+      //console.log('New deck added successfully!');
+    } catch (error) {
+      console.error('Error adding new deck:', error);
+    }
+}
+
+
 const DeckPage =
 {
     ShowLegalCards,
-    CardPage
+    CardPage,
+    addNewDeck,
+    curDeck
 }
 
 export default DeckPage;

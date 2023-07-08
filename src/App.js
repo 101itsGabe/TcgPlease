@@ -1,8 +1,6 @@
 import './App.css';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, Link, Routes, Navigate } from 'react-router-dom';
-import PokeApi from './PokeApi';
 import SetsPage from './Pages/SetsPage';
 // Import the functions you need from the SDKs you need
 import firebase from 'firebase/compat/app';
@@ -12,6 +10,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from  'react-firebase-hooks/firestore';
 import { useNavigate } from 'react-router-dom';
 import DeckPage from './Pages/DeckPage';
+import UserDeckPage from './Pages/UserDeckPage';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
@@ -34,7 +33,7 @@ const firestore = firebase.firestore();
 
 function App() {
   const [user] = useAuthState(auth);
- 
+  
 
   
   return (
@@ -42,7 +41,7 @@ function App() {
       <div className="App">
         {user ? 
         <>
-        
+          <></>
         </>
         :
         <>
@@ -58,7 +57,8 @@ function App() {
         <Route exact path='/userpage' element={<UserPage/>}/>
         <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
         <Route exact path='/card/:photoUrl' element={<DeckPage.CardPage />}/>
-        <Route exact path='/deckcardspage' element={<DeckCardsPage/>}/>
+        <Route exact path='/deckcardspage' element={<DeckPage.curDeck/>}/>
+        <Route exact path='/userdeck' element={<UserDeckPage.allDecks userUid={user ? user.uid : 'null'}/>}/>
       </Routes>
     </Router>
   );
@@ -78,7 +78,11 @@ function DeckCardsPage()
 function UserPage()
 {
   const user = auth.currentUser;
+  const navigate = useNavigate();
+  if(user == null)
+    navigate('/signin');
   return(
+    
     <>
       <header>
           <p><img src={user.photoURL}/>{user.email}</p>
@@ -88,7 +92,7 @@ function UserPage()
         <br/>
         <Link to ='/freak'>Freak you</Link>
         <br/>
-        <Link to ='/deckcardspage'>Deck Cards Page</Link>
+        <Link to ='/userdeck'>Deck Cards Page</Link>
         <br/>
         <SignOut/>
     </>
