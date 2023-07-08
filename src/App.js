@@ -127,7 +127,7 @@ function SignIn() {
   const signInWithGoogle = async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
-    if (users) {
+    if (!loading && users) {
       await ifUser(users);
     }
     navigate('/userpage');
