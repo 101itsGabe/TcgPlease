@@ -5,6 +5,9 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/auth';
 import "../App.css";
 import {Link, useParams } from 'react-router-dom';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { QuerySnapshot } from 'firebase/firestore';
 
 const apiKey = 'b42a776d-16b7-49b2-973c-be2b640e99d9';
 pokemon.configure({apiKey: {apiKey}});
@@ -19,6 +22,8 @@ firebase.initializeApp({
 })
 
   const firestore = firebase.firestore();
+  const auth = firebase.auth();
+
 
 function ShowLegalCards()
 {
@@ -29,7 +34,7 @@ function ShowLegalCards()
 
     React.useEffect(() => {
         fetchCards();
-      }, [currentPage]);
+      }, []);
 
     const fetchCards = async() => {
         try 
@@ -69,7 +74,7 @@ function ShowLegalCards()
                         
                         <nav>
                         <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name} {i}
-                        <button className='plusbtn' onClick={addCard()}>+</button>
+                        <button className='plusbtn' onClick={() =>addCard(card.name)}>+</button>
                         
                     </li>
                     );
@@ -101,16 +106,120 @@ function ShowLegalCards()
 
 */
 
-function curDeck()
-{
 
-    return(
+
+
+const CurDeck = ({ user }) => {
+  const userDeckRef = firestore.collection('userDecks');
+  const [decks, loading, error] = useCollectionData(null, { idField: 'id' });
+  const [ifEdit, setEditOn] = React.useState(false);
+  const [newDeckName, setNewDeckName] = React.useState('');
+  const [currentDeck, setCurDeck] = React.useState(null);
+
+
+ React.useEffect(() => {
+    if (user) {
+      const query = userDeckRef
+        .where('userUid', '==', user.uid)
+        .where('deckName', '==', 'New Deck');
+
+      const fetchData = async () => {
+        try {
+          const querySnapshot = await query.get();
+          if (!querySnapshot.empty) {
+            const deck = querySnapshot.docs[0].data();
+            setCurDeck(deck);
+            console.log(currentDeck);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+      fetchData();
+    }
+  }, [user]);
+
+
+  const handleInputChange = (e) =>
+  {
+    setNewDeckName(e.target.value);
+  }
+
+  const handleKeyDown = (e) =>
+  {
+    if(e.key === 'Enter')
+    {
+      updateDeckName(e);
+      EditSwitch();
+    }
+  }
+  const updateDeckName = (e) => {
+    const tempDeckName = e.target.value;
+    const query = userDeckRef.where('userUid', '==', user.uid).where('deckName', '==', currentDeck.deckName);
+
+    query
+    .get()
+    .then((querySnapshot) => {
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const deckDocRef = userDeckRef.doc(doc.id);
+        return deckDocRef.update({ deckName: tempDeckName });
+      }
+    }).then(() => {
+      setCurDeck({ ...currentDeck, deckName: tempDeckName });
+    })
+    .catch((error) => {
+      console.error('Error updating deck name:', error);
+    });
+
+  };
+    
+    const EditSwitch = () =>
+    {
+      if(ifEdit)
+        setEditOn(false);
+      else
+        setEditOn(true);
+    }
+  
+    return (
+      <div>
         <div>
-            <p>yo</p>
-            <ShowLegalCards/>
-        </div>
-    )
-}
+         <p>
+          {currentDeck? 
+          <div>
+            {ifEdit?
+              <input 
+                type="text" 
+                id="fname" 
+                name="fname" 
+                value={newDeckName}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}/>
+             :(
+             <p>{currentDeck.deckName}</p> 
+             )
+            }
+            <button onClick={() => setEditOn(!ifEdit)}>Edit</button>
+          </div>
+            :
+            <p>damn</p>
+          }
+        </p>
+      </div>
+        <ShowLegalCards />
+      </div>
+      )
+    }
+
+
+
+
+
+
+
+
 
 function CardPage()
 {
@@ -125,40 +234,18 @@ function CardPage()
     )
 }
 
-function addCard()
+function addCard(cardName)
 {
-    console.log("wee");
+    console.log(cardName);
 }
 
-
-async function addNewDeck(userId, deckName) {
-    try {
-      // Create a new deck document
-      const newDeckRef = firestore.collection('decks').doc();
-      
-      // Define the data for the new deck
-      const deckData = {
-        userId: userId,
-        deckName: deckName,
-        cards: []
-      };
-      
-      // Save the new deck to Firestore
-      await newDeckRef.set(deckData);
-      
-      //console.log('New deck added successfully!');
-    } catch (error) {
-      console.error('Error adding new deck:', error);
-    }
-}
 
 
 const DeckPage =
 {
     ShowLegalCards,
     CardPage,
-    addNewDeck,
-    curDeck
+    CurDeck
 }
 
 export default DeckPage;

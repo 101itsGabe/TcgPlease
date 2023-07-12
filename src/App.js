@@ -39,14 +39,8 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {user ? 
-        <>
-          <></>
-        </>
-        :
-        <>
-        </>
-      }
+        
+      
 
       
       </div>
@@ -57,8 +51,8 @@ function App() {
         <Route exact path='/userpage' element={<UserPage/>}/>
         <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
         <Route exact path='/card/:photoUrl' element={<DeckPage.CardPage />}/>
-        <Route exact path='/deckcardspage' element={<DeckPage.curDeck/>}/>
-        <Route exact path='/userdeck' element={<UserDeckPage.allDecks userUid={user ? user.uid : 'null'}/>}/>
+        <Route exact path='/deckcardspage' element={<DeckPage.CurDeck user={user? user : null}/>}/>
+        <Route exact path='/userdeck' element={<UserDeckPage.allDecks user={user? user : null}/>}/>
       </Routes>
     </Router>
   );

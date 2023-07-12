@@ -18,13 +18,13 @@ firebase.initializeApp({
   const firestore = firebase.firestore();
   const auth = firebase.auth();
 
-async function addNewDeck(userId, deckName) {
+async function addNewDeck(user, deckName) {
     //console.log(userId);
     try {
       // Create a new deck document
       const userDeckRef = firestore.collection('userDecks');
       
-      const existingDeckQuery = userDeckRef.where('userId', '==', userId).where('deckName', '==', deckName);
+      const existingDeckQuery = userDeckRef.where('userUid', '==', user.uid).where('deckName', '==', deckName).where('email', '==', user.email);
       const existingDeckSnapshot = await existingDeckQuery.get();
     
         if (!existingDeckSnapshot.empty) {
@@ -33,8 +33,9 @@ async function addNewDeck(userId, deckName) {
         }
 
       const deckData = {
-        userId: userId,
+        userUid: user.uid,
         deckName: deckName,
+        email: user.email,
         cards: []
       };
 
@@ -47,16 +48,61 @@ async function addNewDeck(userId, deckName) {
 }
 //<Link to ='/deckcardspage' onClick={addNewDeck(user.uid,"shesh")}>Create a new deck</Link>        
 
-const allDecks = (userUid) =>
+const allDecks = (user) =>
 {
+  const curUser = user.user;
+  const userDeckRef = firestore.collection('userDecks');
+    if(curUser != null)
+    {
+      
+      const query = userDeckRef.get();
+      const fetchData = async () => {
+        try {
+         
+          const querySnapshot = await query.get();
+        if (!querySnapshot.empty) {
+          const decks = querySnapshot.docs[0].data();
+          //console.log(decks);
+          return decks;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+      
+    };  
     
-    //console.log(user2.email);
+    const allUserDecks = fetchData();
+    allUserDecks.then((result) => 
+    {
+      console.log(result);
+    })
+
+    const renderDecks = () => {
+      const listItems = [];
+      for(let i = 0 ; i < allUserDecks; i++)
+      {
+        const deck = allUserDecks[i];
+        console.log(deck);
+        listItems.push(
+          <li>
+              <div>
+                <p>hi</p>
+              </div>
+          </li>
+          );
+      }
+
+      return listItems;
+    }
     return (
         <div>
         <p>heck yeah</p>
-        <Link to ='/deckcardspage' onClick={() => addNewDeck(userUid, "shesh")}>Create a new deck</Link>        
+        <Link to ='/deckcardspage' onClick={() => addNewDeck(curUser, "New Deck")}>Create a new deck</Link>   
+        <ul>{renderDecks()}</ul>   
         </div>
     )
+    }
 }
 
 
