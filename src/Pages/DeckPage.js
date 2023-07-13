@@ -73,8 +73,7 @@ function ShowLegalCards(props)
         const listItems = [];
         for (let i = 0; i < cards.length; i++) {
           const card = cards[i];
-          if(card != null && card.images != null)
-          {
+            console.log(card.image.large);
             const ecc = encodeURIComponent(card.images.large);
           
                 if(card.legalities.standard == "Legal"){
@@ -85,11 +84,10 @@ function ShowLegalCards(props)
                         <nav>
                         <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name}
                         <button className='plusbtn' onClick={() =>addCard(curUser,deckName,card.id,userDeckRef, setCards)}>+</button>
-                        
                     </li>
                     );
                 }
-        }
+        
         }
         return listItems;
       };
@@ -147,6 +145,7 @@ function CurDeck ( user ){
           if (!querySnapshot.empty) {
             const deck = querySnapshot.docs[0].data();
             setCurDeck(deck);
+            curCards();
             setLoading(false); // Set loading to false when data is fetched
           }
           else{
@@ -165,6 +164,7 @@ function CurDeck ( user ){
           const deck = querySnapshot.docs[0].data();
           setCurDeck(deck);
           curCards();
+          console.log(currentDeck);
           setLoading(false);
         }
       });
@@ -229,9 +229,9 @@ function CurDeck ( user ){
 
     
     async function curCards() {
-      console.log(currentDeck.cards);
       if(currentDeck && currentDeck.cards)
       {
+        console.log('inside');
         setLoading(true);
         try{
           const listItems = [];
@@ -243,7 +243,7 @@ function CurDeck ( user ){
               
               //console.log(card.name);
               listItems.push(
-                <li>
+                <li key={card.id}>
                   <div className ='curDeckDiv'>
                     <img className = 'curDeckCard' src = {card.images.small}/>
                     <p>{card.name}</p> 
