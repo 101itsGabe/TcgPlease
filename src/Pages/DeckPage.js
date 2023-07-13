@@ -73,7 +73,7 @@ function ShowLegalCards()
                     <li key={card.id}>
                         
                         <nav>
-                        <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name} {i}
+                        <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name}
                         <button className='plusbtn' onClick={() =>addCard(card.name)}>+</button>
                         
                     </li>
@@ -109,19 +109,23 @@ function ShowLegalCards()
 
 
 
-const CurDeck = ({ user }) => {
+function CurDeck ( user ){
+  const curUser = user.user;
   const userDeckRef = firestore.collection('userDecks');
   const [decks, loading, error] = useCollectionData(null, { idField: 'id' });
   const [ifEdit, setEditOn] = React.useState(false);
   const [newDeckName, setNewDeckName] = React.useState('');
   const [currentDeck, setCurDeck] = React.useState(null);
 
+  const { deckUrl } = useParams();
+  const CurDeckName = decodeURIComponent(deckUrl);
+
 
  React.useEffect(() => {
-    if (user) {
+    if (curUser) {
       const query = userDeckRef
-        .where('userUid', '==', user.uid)
-        .where('deckName', '==', 'New Deck');
+        .where('userUid', '==', curUser.uid)
+        .where('deckName', '==', CurDeckName);
 
       const fetchData = async () => {
         try {
@@ -138,7 +142,7 @@ const CurDeck = ({ user }) => {
 
       fetchData();
     }
-  }, [user]);
+  }, [curUser]);
 
 
   const handleInputChange = (e) =>
@@ -156,7 +160,7 @@ const CurDeck = ({ user }) => {
   }
   const updateDeckName = (e) => {
     const tempDeckName = e.target.value;
-    const query = userDeckRef.where('userUid', '==', user.uid).where('deckName', '==', currentDeck.deckName);
+    const query = userDeckRef.where('userUid', '==', curUser.uid).where('deckName', '==', CurDeckName);
 
     query
     .get()

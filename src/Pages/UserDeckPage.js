@@ -48,8 +48,9 @@ async function addNewDeck(user, deckName) {
 }
 //<Link to ='/deckcardspage' onClick={addNewDeck(user.uid,"shesh")}>Create a new deck</Link>        
 
-const allDecks = (user) =>
+function AllDecks(user)
 {
+  const [userDecks, setUserDecks] = React.useState([]);
   const curUser = user.user;
   const userDeckRef = firestore.collection('userDecks');
     if(curUser != null)
@@ -59,10 +60,11 @@ const allDecks = (user) =>
       const fetchData = async () => {
         try {
          
-          const querySnapshot = await query.get();
+          const querySnapshot = await query;
         if (!querySnapshot.empty) {
-          const decks = querySnapshot.docs[0].data();
+          const decks = querySnapshot.docs.map((doc) => doc.data());
           //console.log(decks);
+          setUserDecks(decks);
           return decks;
         }
       } catch (error) {
@@ -75,22 +77,28 @@ const allDecks = (user) =>
     const allUserDecks = fetchData();
     allUserDecks.then((result) => 
     {
-      console.log(result);
+      //console.log(result);
+      setUserDecks(result);
     })
 
+    //console.log(userDecks);
     const renderDecks = () => {
       const listItems = [];
-      for(let i = 0 ; i < allUserDecks; i++)
+      for(let i = 0 ; i < userDecks.length; i++)
       {
-        const deck = allUserDecks[i];
-        console.log(deck);
+        const deck = userDecks[i];
+        //console.log(user.user.email);
+        if(deck.email == user.user.email)
+        {
+        const ecc = encodeURIComponent(deck.deckName);
         listItems.push(
           <li>
               <div>
-                <p>hi</p>
+                <p><Link to={'/deckcardspage/' + ecc} onClick={() => addNewDeck(curUser, deck.deckName)}>{deck.deckName}</Link>  </p>
               </div>
           </li>
           );
+        }
       }
 
       return listItems;
@@ -108,7 +116,7 @@ const allDecks = (user) =>
 
 
 const UserDeckPage = {
-   allDecks
+   AllDecks
 }
 
 export default UserDeckPage;

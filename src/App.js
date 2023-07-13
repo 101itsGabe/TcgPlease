@@ -51,8 +51,9 @@ function App() {
         <Route exact path='/userpage' element={<UserPage/>}/>
         <Route exact path='/' element={user ? <Navigate to='/userpage'/> : <Navigate to='/signin'/>}/>
         <Route exact path='/card/:photoUrl' element={<DeckPage.CardPage />}/>
-        <Route exact path='/deckcardspage' element={<DeckPage.CurDeck user={user? user : null}/>}/>
-        <Route exact path='/userdeck' element={<UserDeckPage.allDecks user={user? user : null}/>}/>
+        <Route exact path='/deckcardspage/:deckUrl' element={<DeckPage.CurDeck user={user? user : null}/>}/>
+        <Route exact path='/deckcardspage/' element={<DeckPage.CurDeck user={user? user : null}/>}/>
+        <Route exact path='/userdeck' element={<UserDeckPage.AllDecks user={user? user : null}/>}/>
       </Routes>
     </Router>
   );
