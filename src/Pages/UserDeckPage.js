@@ -36,6 +36,7 @@ async function addNewDeck(user, deckName) {
         userUid: user.uid,
         deckName: deckName,
         email: user.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         cards: []
       };
 
@@ -106,7 +107,7 @@ function AllDecks(user)
     return (
         <div>
         <p>heck yeah</p>
-        <Link to ='/deckcardspage' onClick={() => addNewDeck(curUser, "New Deck")}>Create a new deck</Link>   
+        <Link to ={'/deckcardspage/' + encodeURIComponent("New Deck")} onClick={() => addNewDeck(curUser, "New Deck")}>Create a new deck</Link>   
         <ul>{renderDecks()}</ul>   
         </div>
     )

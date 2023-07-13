@@ -25,12 +25,12 @@ firebase.initializeApp({
   const auth = firebase.auth();
 
 
-function ShowLegalCards()
+function ShowLegalCards(props)
 {
-    
+    const {curUser, deckName, userDeckRef} = props;
     const [cards, setCards] = React.useState([]);
     const [currentPage, setCurrentPage] = React.useState(1);
-    const [cardsCache, setCardsCache] = React.useState({});
+    const [isLoading, setLoading] = React.useState(true); // New loading state
 
     React.useEffect(() => {
         fetchCards();
@@ -43,6 +43,7 @@ function ShowLegalCards()
           .then(result => {
             //console.log(result.data) // "Blastoise"
             setCards(result.data);
+            setLoading(false);
           })
             
         }catch(er)
@@ -55,18 +56,27 @@ function ShowLegalCards()
 
     const nextPage = () =>{
         setCurrentPage(currentPage + 1);
+        fetchCards();
     }
 
     const prevPage = () =>{
-        if (!currentPage - 1 <= 0)
+        if (!currentPage - 1 <= 0){
             setCurrentPage(currentPage - 1);
+            fetchCards();
+        }
     }
     
     const renderCards = () => {
+      if (isLoading) {
+        return <p>Loading...</p>; // Render a loading message while data is being fetched
+      }
         const listItems = [];
         for (let i = 0; i < cards.length; i++) {
           const card = cards[i];
-          const ecc = encodeURIComponent(card.images.large);
+          if(card != null && card.images != null)
+          {
+            const ecc = encodeURIComponent(card.images.large);
+          
                 if(card.legalities.standard == "Legal"){
                     listItems.push(
                       
@@ -74,11 +84,12 @@ function ShowLegalCards()
                         
                         <nav>
                         <Link to={"/card/" + ecc}><img className="pkCard" src={card.images.small}/></Link></nav>{card.name}
-                        <button className='plusbtn' onClick={() =>addCard(card.name)}>+</button>
+                        <button className='plusbtn' onClick={() =>addCard(curUser,deckName,card.id,userDeckRef, setCards)}>+</button>
                         
                     </li>
                     );
                 }
+        }
         }
         return listItems;
       };
@@ -91,11 +102,10 @@ function ShowLegalCards()
         <h1>All Cards</h1>
         <button onClick={prevPage}>Prev Page</button> 
         <button onClick={nextPage}>Next Page</button>
+        <input id='searchCard'/>
         <ul>{renderCards()}</ul>
         </div>
     );
-    
-    
     
 }
 
@@ -116,35 +126,62 @@ function CurDeck ( user ){
   const [ifEdit, setEditOn] = React.useState(false);
   const [newDeckName, setNewDeckName] = React.useState('');
   const [currentDeck, setCurDeck] = React.useState(null);
+  const [isLoading, setLoading] = React.useState(true); // New loading state
+
 
   const { deckUrl } = useParams();
   const CurDeckName = decodeURIComponent(deckUrl);
+  const [cards, setCards] = React.useState([]);
 
 
  React.useEffect(() => {
+
+    let unsubscribeSnapshot;
     if (curUser) {
       const query = userDeckRef
         .where('userUid', '==', curUser.uid)
         .where('deckName', '==', CurDeckName);
-
       const fetchData = async () => {
         try {
           const querySnapshot = await query.get();
           if (!querySnapshot.empty) {
             const deck = querySnapshot.docs[0].data();
             setCurDeck(deck);
-            console.log(currentDeck);
+            setLoading(false); // Set loading to false when data is fetched
+          }
+          else{
+            setLoading(false); // Set loading to false even if deck is not found
           }
         } catch (error) {
           console.log(error);
+          setLoading(false);
         }
       };
 
       fetchData();
+
+      unsubscribeSnapshot = query.onSnapshot((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          const deck = querySnapshot.docs[0].data();
+          setCurDeck(deck);
+          curCards();
+          setLoading(false);
+        }
+      });
     }
+    return () => {
+      // Unsubscribe from the snapshot listener and reset the state when the component unmounts
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+      setCurDeck(null);
+      setLoading(true);
+    };
   }, [curUser]);
 
-
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
   const handleInputChange = (e) =>
   {
     setNewDeckName(e.target.value);
@@ -172,6 +209,8 @@ function CurDeck ( user ){
       }
     }).then(() => {
       setCurDeck({ ...currentDeck, deckName: tempDeckName });
+     
+      
     })
     .catch((error) => {
       console.error('Error updating deck name:', error);
@@ -186,7 +225,47 @@ function CurDeck ( user ){
       else
         setEditOn(true);
     }
-  
+    
+
+    
+    async function curCards() {
+      console.log(currentDeck.cards);
+      if(currentDeck && currentDeck.cards)
+      {
+        setLoading(true);
+        try{
+          const listItems = [];
+          for (let i = 0; i < currentDeck.cards.length; i++) {
+            const cardId = currentDeck.cards[i];
+            //console.log(cardId);
+            try{
+              const card =  await pokemon.card.find(cardId)
+              
+              //console.log(card.name);
+              listItems.push(
+                <li>
+                  <div className ='curDeckDiv'>
+                    <img className = 'curDeckCard' src = {card.images.small}/>
+                    <p>{card.name}</p> 
+                    <button onClick={deleteCard()}>-</button>
+                  </div>
+                </li>
+              );
+          
+          }
+          catch(er){
+            console.log(er);
+          }
+        }
+      setCards(listItems);
+      setLoading(false);
+        }catch(er)
+        {console.log(er);}
+    }
+   //curCards();
+  }
+
+
     return (
       <div>
         <div>
@@ -206,24 +285,24 @@ function CurDeck ( user ){
              )
             }
             <button onClick={() => setEditOn(!ifEdit)}>Edit</button>
+            <ul className='ulListOfCards'>{cards ? cards : null}</ul>
+            
           </div>
             :
-            <p>damn</p>
+            <p>Deck not found</p>
           }
         </p>
       </div>
-        <ShowLegalCards />
+        <ShowLegalCards 
+          curUser={curUser} 
+          userDeckRef = {userDeckRef} 
+          deckName = {currentDeck.deckName}
+          setCards={setCards} />
       </div>
       )
-    }
+}
 
-
-
-
-
-
-
-
+    
 
 function CardPage()
 {
@@ -238,11 +317,37 @@ function CardPage()
     )
 }
 
-function addCard(cardName)
+function addCard(curUser,deckName,cardId,userDeckRef, setCards)
 {
-    console.log(cardName);
+    const query = userDeckRef
+        .where('userUid', '==', curUser.uid)
+        .where('deckName', '==', deckName);
+    const fetchData = async () => {
+        try {
+          const querySnapshot = await query.get();
+          if (!querySnapshot.empty) {
+            const deck = querySnapshot.docs[0].data();
+            const deckDoc = querySnapshot.docs[0];
+            deck.cards = [...deck.cards,cardId];
+            userDeckRef.doc(deckDoc.id).update(deck).then(() =>
+            {
+              console.log("Updated!");
+              setCards(deck.cards);
+            }).catch((er) =>{console.log(er);})
+          }
+          } catch (error) {
+            console.log(error);
+          }
+          
+        };
+
+  fetchData();
 }
 
+function deleteCard()
+{
+  console.log('yer');
+}
 
 
 const DeckPage =

@@ -58,3 +58,22 @@
 {
   margin-left: 10px;
 }
+
+.curDeckCard
+{
+  max-width: 50px;
+  max-width: 50px;
+}
+
+.curDeckDiv
+{
+  display: flex;
+  margin: 1px;
+}
+
+.ulListOfCards
+{
+  display: flex;
+  max-height: 300px; /* Set the maximum height to control the number of visible cards */
+  overflow-y: scroll;
+}
